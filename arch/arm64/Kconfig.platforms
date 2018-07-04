@@ -53,7 +53,7 @@ config ARCH_QCOM
 	select HAVE_CLK
 	select HAVE_CLK_PREPARE
 	select PM_OPP
-    	select SOC_BUS
+	select SOC_BUS
 	select MSM_IRQ
 	select THERMAL_WRITABLE_TRIPS
 	select RATIONAL
@@ -96,6 +96,18 @@ config ARCH_SDM660
 	  This enables support for the SDM660 chipset.
 	  If you do not wish to build a kernel that runs
 	  on this chipset,say 'N' here.
+
+config MACH_XIAOMI_WAYNE
+	bool "Enable Support for Wayne"
+	depends on ARCH_SDM660
+	help
+	  This enables support for Xiaomi Wayne Board.
+
+config MACH_XIAOMI_WHYRED
+	bool "Enable Support for Whyred"
+	depends on ARCH_SDM660
+	help
+	  This enables support for Xiaomi Whyred Board.
 
 config ARCH_SDM630
 	bool "Enable Support for Qualcomm Technologies Inc SDM630"
