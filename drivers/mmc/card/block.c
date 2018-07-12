@@ -37,7 +37,9 @@
 #include <linux/compat.h>
 #include <linux/pm_runtime.h>
 #include <linux/ioprio.h>
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || (CONFIG_MACH_XIAOMI_WHYRED)
+#include <linux/mmc/ffu.h>
+#endif
 #include <trace/events/mmc.h>
 
 #include <linux/mmc/ioctl.h>
@@ -165,7 +167,11 @@ MODULE_PARM_DESC(perdev_minors, "Minors numbers to allocate per device");
 static inline int mmc_blk_part_switch(struct mmc_card *card,
 				      struct mmc_blk_data *md);
 static int get_card_status(struct mmc_card *card, u32 *status, int retries);
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+int mmc_blk_cmdq_switch(struct mmc_card *card,
+#else
 static int mmc_blk_cmdq_switch(struct mmc_card *card,
+#endif
 			       struct mmc_blk_data *md, bool enable);
 
 static inline void mmc_blk_clear_packed(struct mmc_queue_req *mqrq)
@@ -1348,8 +1354,11 @@ static const struct block_device_operations mmc_bdops = {
 	.compat_ioctl		= mmc_blk_compat_ioctl,
 #endif
 };
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+int mmc_blk_cmdq_switch(struct mmc_card *card,
+#else
 static int mmc_blk_cmdq_switch(struct mmc_card *card,
+#endif
 			       struct mmc_blk_data *md, bool enable)
 {
 	int ret = 0;
@@ -4673,7 +4682,9 @@ static int mmc_blk_probe(struct mmc_card *card)
 		pm_runtime_set_active(&card->dev);
 		pm_runtime_enable(&card->dev);
 	}
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || (CONFIG_MACH_XIAOMI_WHYRED)
+	mmc_ffu(card);
+#endif
 	return 0;
 
  out:
