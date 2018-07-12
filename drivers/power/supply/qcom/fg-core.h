@@ -422,6 +422,9 @@ struct fg_chip {
 	int			last_msoc;
 	int			last_recharge_volt_mv;
 	int			esr_timer_charging_default[NUM_ESR_TIMERS];
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	int			battery_full_design;
+#endif
 	enum slope_limit_status	slope_limit_sts;
 	bool			profile_available;
 	bool			profile_loaded;

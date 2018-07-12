@@ -268,7 +268,9 @@ static int smb2_parse_dt(struct smb2 *chip)
 				&chip->dt.wipower_max_uw);
 	if (rc < 0)
 		chip->dt.wipower_max_uw = -EINVAL;
-
+#if defined (CONFIG_MACH_XIAOMI_WHYRED)
+	if (hwc_check_india) {
+#endif
 	if (of_find_property(node, "qcom,thermal-mitigation", &byte_len)) {
 		chg->thermal_mitigation = devm_kzalloc(chg->dev, byte_len,
 			GFP_KERNEL);
@@ -287,7 +289,28 @@ static int smb2_parse_dt(struct smb2 *chip)
 			return rc;
 		}
 	}
+#if defined (CONFIG_MACH_XIAOMI_WHYRED)
+	} else {
+		if (of_find_property(node, "qcom,thermal-mitigation-china", &byte_len)) {
+			chg->thermal_mitigation = devm_kzalloc(chg->dev, byte_len,
+				GFP_KERNEL);
 
+			if (chg->thermal_mitigation == NULL)
+				return -ENOMEM;
+
+			chg->thermal_levels = byte_len / sizeof(u32);
+				rc = of_property_read_u32_array(node,
+						"qcom,thermal-mitigation-china",
+						chg->thermal_mitigation,
+						chg->thermal_levels);
+			if (rc < 0) {
+				dev_err(chg->dev,
+					"Couldn't read threm limits rc = %d\n", rc);
+				return rc;
+			}
+		}
+	}
+#endif
 	of_property_read_u32(node, "qcom,float-option", &chip->dt.float_option);
 	if (chip->dt.float_option < 0 || chip->dt.float_option > 4) {
 		pr_err("qcom,float-option is out of range [0, 4]\n");
@@ -395,7 +418,15 @@ static int smb2_usb_get_prop(struct power_supply *psy,
 		rc = smblib_get_prop_input_current_settled(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_TYPE:
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+		if ((chg->real_charger_type == POWER_SUPPLY_TYPE_USB_HVDCP) || (chg->real_charger_type == POWER_SUPPLY_TYPE_USB_HVDCP_3)) {
+			val->intval = chg->real_charger_type;
+		} else {
+#endif
 		val->intval = POWER_SUPPLY_TYPE_USB_PD;
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+		}
+#endif
 		break;
 	case POWER_SUPPLY_PROP_REAL_TYPE:
 		if (chip->bad_part)
@@ -928,6 +959,9 @@ static enum power_supply_property smb2_batt_props[] = {
 	POWER_SUPPLY_PROP_RERUN_AICL,
 	POWER_SUPPLY_PROP_DP_DM,
 	POWER_SUPPLY_PROP_CHARGE_COUNTER,
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+#endif
 };
 
 static int smb2_batt_get_prop(struct power_supply *psy,
@@ -1011,7 +1045,11 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 		rc = smblib_get_prop_batt_temp(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_TECHNOLOGY:
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+		val->intval = POWER_SUPPLY_TECHNOLOGY_LIPO;
+#else
 		val->intval = POWER_SUPPLY_TECHNOLOGY_LION;
+#endif
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_DONE:
 		rc = smblib_get_prop_batt_charge_done(chg, val);
@@ -1030,6 +1068,11 @@ static int smb2_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_DP_DM:
 		val->intval = chg->pulse_cnt;
 		break;
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		rc = smblib_get_prop_battery_full_design(chg, val);
+		break;
+#endif
 	case POWER_SUPPLY_PROP_RERUN_AICL:
 		val->intval = 0;
 		break;
@@ -1685,7 +1728,9 @@ static int smb2_init_hw(struct smb2 *chip)
 			rc);
 		return rc;
 	}
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	rc = vote(chg->chg_disable_votable, DEFAULT_VOTER, true, 0);
+#endif
 	switch (chip->dt.chg_inhibit_thr_mv) {
 	case 50:
 		rc = smblib_masked_write(chg, CHARGE_INHIBIT_THRESHOLD_CFG_REG,
@@ -1713,7 +1758,9 @@ static int smb2_init_hw(struct smb2 *chip)
 	default:
 		break;
 	}
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	rc = vote(chg->chg_disable_votable, DEFAULT_VOTER, false, 0);
+#endif
 	if (rc < 0) {
 		dev_err(chg->dev, "Couldn't configure charge inhibit threshold rc=%d\n",
 			rc);

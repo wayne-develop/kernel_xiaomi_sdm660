@@ -60,7 +60,11 @@ static ssize_t power_supply_show_property(struct device *dev,
 		"Unknown", "Good", "Overheat", "Dead", "Over voltage",
 		"Unspecified failure", "Cold", "Watchdog timer expire",
 		"Safety timer expire",
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+		"Warm", "Cool", "Hot", "Low_Cool"
+#else
 		"Warm", "Cool", "Hot"
+#endif
 	};
 	static char *technology_text[] = {
 		"Unknown", "NiMH", "Li-ion", "Li-poly", "LiFe", "NiCd",
@@ -87,8 +91,11 @@ static ssize_t power_supply_show_property(struct device *dev,
 	struct power_supply *psy = dev_get_drvdata(dev);
 	const ptrdiff_t off = attr - power_supply_attrs;
 	union power_supply_propval value;
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	if ((off == POWER_SUPPLY_PROP_TYPE) && (strcmp(psy->desc->name, "usb") != 0)) {
+#else
 	if (off == POWER_SUPPLY_PROP_TYPE) {
+#endif
 		value.intval = psy->desc->type;
 	} else {
 		ret = power_supply_get_property(psy, off, &value);

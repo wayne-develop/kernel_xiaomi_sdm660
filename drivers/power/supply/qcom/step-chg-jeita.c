@@ -118,25 +118,52 @@ static struct step_chg_cfg step_chg_config = {
 static struct jeita_fcc_cfg jeita_fcc_config = {
 	.psy_prop	= POWER_SUPPLY_PROP_TEMP,
 	.prop_name	= "BATT_TEMP",
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
 	.hysteresis	= 10, /* 1degC hysteresis */
+#endif
 	.fcc_cfg	= {
 		/* TEMP_LOW	TEMP_HIGH	FCC */
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+#if defined (CONFIG_MACH_XIAOMI_WAYNE)
+		{0,		50,		300000},
+		{51,		150,		900000},
+		{151,		450,		2900000},
+		{451,		600,		1500000},
+#elif defined (CONFIG_MACH_XIAOMI_WHYRED)
+		{0,		50,		400000},
+		{51,		150,		1200000},
+		{151,		450,		2500000},
+		{451,		600,		1200000},
+#endif
+#else
 		{0,		100,		600000},
 		{101,		200,		2000000},
 		{201,		450,		3000000},
 		{451,		550,		600000},
+#endif
 	},
 };
 
 static struct jeita_fv_cfg jeita_fv_config = {
 	.psy_prop	= POWER_SUPPLY_PROP_TEMP,
 	.prop_name	= "BATT_TEMP",
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+	.hysteresis	= 0, /* 1degC hysteresis */
+#else
 	.hysteresis	= 10, /* 1degC hysteresis */
+#endif
 	.fv_cfg		= {
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+		/* TEMP_LOW	TEMP_HIGH	FV */
+		{0,		150,		4400000},
+		{151,		450,		4400000},
+		{451,		600,		4100000},
+#else
 		/* TEMP_LOW	TEMP_HIGH	FCC */
 		{0,		100,		4200000},
 		{101,		450,		4400000},
 		{451,		550,		4200000},
+#endif
 	},
 };
 
