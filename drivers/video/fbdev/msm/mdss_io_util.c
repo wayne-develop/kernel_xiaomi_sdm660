@@ -18,6 +18,12 @@
 #include <linux/mdss_io_util.h>
 
 #define MAX_I2C_CMDS  16
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+extern bool enable_gesture_mode;
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DSX
+extern bool synaptics_gesture_func_on;
+#endif
+#endif
 void dss_reg_w(struct dss_io_data *io, u32 offset, u32 value, u32 debug)
 {
 	u32 in_val;
@@ -211,7 +217,9 @@ vreg_get_fail:
 	return rc;
 } /* msm_dss_config_vreg */
 EXPORT_SYMBOL(msm_dss_config_vreg);
-
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+extern bool ESD_TE_status;
+#endif
 int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 {
 	int i = 0, rc = 0;
@@ -250,6 +258,23 @@ int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 		}
 	} else {
 		for (i = num_vreg-1; i >= 0; i--) {
+#if defined (CONFIG_MACH_XIAOMI_WAYNE) || defined (CONFIG_MACH_XIAOMI_WHYRED)
+			if (ESD_TE_status) {
+				printk("nova panel esd check recovery \n");
+			} else {
+				/* vddio l14 continus supply */
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DSX
+				if (enable_gesture_mode || synaptics_gesture_func_on) {
+#else
+				if (enable_gesture_mode) {
+#endif
+					if ((strcmp(in_vreg[i].vreg_name, "lab") == 0) || (strcmp(in_vreg[i].vreg_name, "ibb") == 0)) {
+						printk("%s is not disable\n", in_vreg[i].vreg_name);
+						continue;
+					}
+				}
+			}
+#endif
 			if (in_vreg[i].pre_off_sleep)
 				usleep_range(in_vreg[i].pre_off_sleep * 1000,
 					in_vreg[i].pre_off_sleep * 1000);
