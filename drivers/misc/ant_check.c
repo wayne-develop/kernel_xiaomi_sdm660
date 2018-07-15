@@ -41,7 +41,7 @@ static irqreturn_t ant_interrupt(int irq, void *data)
 	int ant_gpio;
 
 	ant_gpio = gpio_get_value_cansleep(ant_info->irq_gpio);
-	pr_err("Macle irq interrupt gpio = %d\n", ant_gpio);
+	pr_info("Macle irq interrupt gpio = %d\n", ant_gpio);
 	if (ant_gpio == ant_info->ant_check_state) {
 		return IRQ_HANDLED;
 	} else {

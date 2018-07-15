@@ -45,7 +45,7 @@ static irqreturn_t hall_interrupt(int irq, void *data)
 	int hall_gpio;
 
 	hall_gpio = gpio_get_value_cansleep(hall_info->irq_gpio);
-	pr_err("Macle irq interrupt gpio = %d\n", hall_gpio);
+	pr_info("Macle irq interrupt gpio = %d\n", hall_gpio);
 	if (hall_gpio == hall_info->hall_switch_state) {
 		return IRQ_HANDLED;
 	} else {
