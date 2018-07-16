@@ -1,4 +1,5 @@
 /* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,6 +25,8 @@ extern struct vendor_eeprom s_vendor_eeprom[CAMERA_VENDOR_EEPROM_COUNT_MAX];
 /* Logging macro */
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
+
+#define LCT_CAMERA_DEBUG 0
 
 #define SENSOR_MAX_MOUNTANGLE (360)
 
@@ -176,6 +179,7 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 {
 	int32_t rc = 0;
 	const char *eeprom_name;
+	const char *lct_eeprom_name;
 	struct device_node *src_node = NULL;
 	uint32_t val = 0, eeprom_name_len;
 	int32_t *eeprom_subdev_id, i, userspace_probe = 0;
@@ -186,8 +190,14 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 
 	if (!s_ctrl->sensordata->eeprom_name || !of_node)
 		return -EINVAL;
-
+	#if LCT_CAMERA_DEBUG
+	pr_err("msm_sensor_fill_eeprom_subdevid_by_name s_ctrl->sensordata->eeprom_name  = %s \n", s_ctrl->sensordata->eeprom_name);
+	pr_err("msm_sensor_fill_eeprom_subdevid_by_name s_ctrl->sensordata->sensor_name = %s \n", s_ctrl->sensordata->sensor_name);
+	#endif
 	eeprom_name_len = strlen(s_ctrl->sensordata->eeprom_name);
+	#if LCT_CAMERA_DEBUG
+	pr_err("msm_sensor_fill_eeprom_subdevid_by_name eeprom_name_len  = %d \n", eeprom_name_len);
+	#endif
 	if (eeprom_name_len >= MAX_SENSOR_NAME)
 		return -EINVAL;
 
@@ -207,9 +217,13 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 		return 0;
 
 	count /= sizeof(uint32_t);
+	#if LCT_CAMERA_DEBUG
+	pr_err("msm_sensor_fill_eeprom_subdevid_by_name count  = %d \n", count);
+	#endif
 	for (i = 0; i < count; i++) {
 		userspace_probe = 0;
 		eeprom_name = NULL;
+		lct_eeprom_name = NULL;
 		src_node = of_parse_phandle(of_node, "qcom,eeprom-src", i);
 		if (!src_node) {
 			pr_err("eeprom src node NULL\n");
@@ -225,12 +239,30 @@ static int32_t msm_sensor_fill_eeprom_subdevid_by_name(
 				s_ctrl->sensordata->eeprom_name);
 			of_node_put(src_node);
 			userspace_probe = 1;
-			if (count > 1)
+			if (count > 5)
 				return -EINVAL;
 		}
 		if (!userspace_probe &&
 			strcmp(eeprom_name, s_ctrl->sensordata->eeprom_name))
 			continue;
+
+
+		if (userspace_probe == 1) {
+			rc = of_property_read_string(src_node, "qcom,lct_eeprom-name",  &lct_eeprom_name);
+			if (rc < 0) {
+				#if LCT_CAMERA_DEBUG
+				pr_err("%s this eeprom not config  qcom,lct_eeprom-name rc = %d\n", __func__, rc);
+				#endif
+			} else {
+				#if LCT_CAMERA_DEBUG
+				pr_err("msm_sensor_fill_eeprom_subdevid_by_name lct_eeprom_name = %s\n", lct_eeprom_name);
+				#endif
+				if (strcmp(s_ctrl->sensordata->eeprom_name, lct_eeprom_name)) {
+					rc = 0;
+					continue;
+				}
+			}
+		}
 
 		rc = of_property_read_u32(src_node, "cell-index", &val);
 		if (rc < 0) {
@@ -805,6 +837,7 @@ int32_t msm_sensor_init_device_name(void)
 	return 0 ;
 }
 
+
 static uint16_t msm_sensor_get_sensor_id_ovti_13855(struct msm_sensor_ctrl_t *s_ctrl, char *sensor_fusion_id)
 {
 	int rc = 0;
@@ -1123,7 +1156,7 @@ static uint16_t msm_sensor_get_sensor_id_samsung_2L7(struct msm_sensor_ctrl_t *s
 static struct kobject *msm_sensorid_device;
 static char sensor_fusion_id[512] = {0};
 
-void msm_sensor_set_sensor_id(struct msm_sensor_ctrl_t *s_ctrl)
+void msm_sensor_set_sesnor_id(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	char  sensor_fusion_id_tmp[90] = {0};
 	int rc = 0;
@@ -1217,6 +1250,7 @@ int32_t msm_sensorid_init_device_name(void)
 	return 0 ;
 }
 #endif
+
 /* static function definition */
 int32_t msm_sensor_driver_probe(void *setting,
 	struct msm_sensor_info_t *probed_info, char *entity_name)
@@ -1233,6 +1267,7 @@ int32_t msm_sensor_driver_probe(void *setting,
 #ifdef CONFIG_MACH_XIAOMI_WHYRED
 	uint32_t                             i = 0;
 #endif
+
 
 	/* Validate input parameters */
 	if (!setting) {
@@ -1331,6 +1366,8 @@ int32_t msm_sensor_driver_probe(void *setting,
 		rc = -EINVAL;
 		goto free_slave_info;
 	}
+
+
 #ifdef CONFIG_MACH_XIAOMI_WHYRED
 	if ((strcmp(slave_info->eeprom_name, "whyred_s5k5e8_ofilm_i") == 0) ||
 		(strcmp(slave_info->eeprom_name, "whyred_s5k5e8_qtech_ii") == 0)) {
@@ -1359,6 +1396,9 @@ int32_t msm_sensor_driver_probe(void *setting,
 		}
 	}
 #endif
+
+
+
 	/* Print slave info */
 	CDBG("camera id %d Slave addr 0x%X addr_type %d\n",
 		slave_info->camera_id, slave_info->slave_addr,
@@ -1415,8 +1455,7 @@ int32_t msm_sensor_driver_probe(void *setting,
 		if ((slave_info->sensor_id_info.sensor_id ==
 			s_ctrl->sensordata->cam_slave_info->sensor_id_info.sensor_id) &&
 			(!(strcmp(slave_info->sensor_name,
-			s_ctrl->sensordata->cam_slave_info->sensor_name)))
-			&& (slave_info->vendor_id_info.vendor_id ==
+			s_ctrl->sensordata->cam_slave_info->sensor_name))) && (slave_info->vendor_id_info.vendor_id ==
 			s_ctrl->sensordata->cam_slave_info->vendor_id_info.vendor_id)) {
 #else
 		if (slave_info->sensor_id_info.sensor_id ==
@@ -1527,6 +1566,7 @@ CSID_TG:
 	s_ctrl->sensordata->vendor_id_info = &(slave_info->vendor_id_info);
 	s_ctrl->sensordata->vcm_id_info = &(slave_info->vcm_id_info);
 #endif
+
 	/*
 	 * Update eeporm subdevice Id by input eeprom name
 	 */
@@ -1587,21 +1627,18 @@ CSID_TG:
 		goto camera_power_down;
 	}
 
-	/* Power down */
-	s_ctrl->func_tbl->sensor_power_down(s_ctrl);
-
 	rc = msm_sensor_fill_slave_info_init_params(
 		slave_info,
 		s_ctrl->sensordata->sensor_info);
 	if (rc < 0) {
 		pr_err("%s Fill slave info failed", slave_info->sensor_name);
-		goto free_camera_info;
+		goto camera_power_down;
 	}
 	rc = msm_sensor_validate_slave_info(s_ctrl->sensordata->sensor_info);
 	if (rc < 0) {
 		pr_err("%s Validate slave info failed",
 			slave_info->sensor_name);
-		goto free_camera_info;
+		goto camera_power_down;
 	}
 	/* Update sensor mount angle and position in media entity flag */
 	is_yuv = (slave_info->output_format == MSM_SENSOR_YCBCR) ? 1 : 0;
@@ -1620,8 +1657,11 @@ CSID_TG:
 	msm_sensor_init_device_name();
 	msm_sensor_set_module_info(s_ctrl);
 	msm_sensorid_init_device_name();
-	msm_sensor_set_sensor_id(s_ctrl);
+	msm_sensor_set_sesnor_id(s_ctrl);
 #endif
+	/* Power down */
+	s_ctrl->func_tbl->sensor_power_down(s_ctrl);
+
 
 	/*
 	 * Set probe succeeded flag to 1 so that no other camera shall

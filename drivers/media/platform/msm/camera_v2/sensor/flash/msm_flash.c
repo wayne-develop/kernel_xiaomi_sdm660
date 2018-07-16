@@ -636,7 +636,7 @@ static int32_t msm_flash_low(
 				pr_debug("LED current clamped to %d\n",
 					curr);
 			}
-			CDBG("low_flash_current[%d] = %d", i, curr);
+			pr_err("XY low_flash_current[%d] = %d\n", i, curr);
 			led_trigger_event(flash_ctrl->torch_trigger[i],
 				curr);
 		}
@@ -678,7 +678,7 @@ static int32_t msm_flash_high(
 				curr = 750;
 			}
 #endif
-			CDBG("high_flash_current[%d] = %d", i, curr);
+			pr_err("XY high_flash_current[%d] = %d\n", i, curr);
 			led_trigger_event(flash_ctrl->flash_trigger[i],
 				curr);
 		}
