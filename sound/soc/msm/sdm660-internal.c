@@ -3312,7 +3312,7 @@ static struct snd_soc_card *msm_int_populate_sndcard_dailinks(
 	if (of_property_read_bool(dev->of_node,
 				  "qcom,mi2s-audio-intf")) {
 #if defined (CONFIG_SND_SOC_TAS2557) && defined (CONFIG_SND_SOC_TFA98XX)
-		if (btas2557) {
+		if (0 == btas2557) {
 			memcpy(dailink + len1,
 				   msm_mi2s_be_dai_links_nxp,
 				   sizeof(msm_mi2s_be_dai_links_nxp));
@@ -3451,8 +3451,8 @@ int msm_int_cdc_init(struct platform_device *pdev,
 	msm_internal_init(pdev, pdata, *card);
 	return 0;
 }
-EXPORT_SYMBOL(msm_int_cdc_init);
 
 #if defined (CONFIG_SND_SOC_TAS2557) && defined (CONFIG_SND_SOC_TFA98XX)
 module_param(smartpa_ti, int, 0444);
 #endif
+EXPORT_SYMBOL(msm_int_cdc_init);

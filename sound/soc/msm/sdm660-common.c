@@ -3234,6 +3234,8 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	if (pdata->snd_card_val != INT_SND_CARD)
 		msm_ext_register_audio_notifier(pdev);
 
+	printk("%s_ok\n", __func__);
+
 	return 0;
 err:
 	if (pdata->us_euro_gpio > 0) {
