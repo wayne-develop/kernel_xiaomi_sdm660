@@ -183,8 +183,7 @@ dtb-$(CONFIG_ARCH_SDM660) += sdm660-mtp_whyred.dtb  \
 	sdm636-mtp_whyred.dtb \
 	sdm636-mtp_wayne.dtb \
 	sdm660-mtp_wayne_a1.dtb \
-	sdm660-mtp_wayne.dtb
-	#sdm660-mtp.dtb \
+	sdm660-mtp_wayne.dtb \
 	#sdm660-sim.dtb \
 	#sdm660-internal-codec-cdp.dtb \
 	#sdm660-internal-codec-mtp.dtb \
@@ -216,6 +215,8 @@ dtb-$(CONFIG_ARCH_SDM660) += sdm660-mtp_whyred.dtb  \
 	#sdm660-pm660a-headset-jacktype-no-rcm.dtb \
 	#sdm660-usbc-audio-mtp.dtb \
 	#sdm660-usbc-audio-rcm.dtb \
+	#sdm660-fhd-cdp.dtb \
+	#sdm660-pm660a-fhd-cdp.dtb \
 	#sdm658-mtp.dtb \
 	#sdm658-cdp.dtb \
 	#sdm658-rcm.dtb \
